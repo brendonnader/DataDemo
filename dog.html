@@ -42,26 +42,47 @@
       from { left: 600px; }
       to { left: -50px; }
     }
+
+    .scoreboard {
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div class="game">
+    <div class="scoreboard">
+      Score: <span id="score">0</span> | High Score: <span id="highscore">0</span>
+    </div>
     <div class="dog" id="dog">🐶</div>
     <div class="obstacle" id="obstacle">🌵</div>
   </div>
 
   <script>
-    const dog = document.getElementById('dog');
-    const obstacle = document.getElementById('obstacle');
+    const dog = document.getElementById("dog");
+    const obstacle = document.getElementById("obstacle");
+    const scoreDisplay = document.getElementById("score");
+    const highScoreDisplay = document.getElementById("highscore");
+
     let isJumping = false;
+    let score = 0;
+    let gameOver = false;
+
+    // Load high score from localStorage
+    let highScore = localStorage.getItem("dogHighScore") || 0;
+    highScoreDisplay.textContent = highScore;
 
     function jump() {
-      if (isJumping) return;
+      if (isJumping || gameOver) return;
       isJumping = true;
       let up = 0;
 
       const upInterval = setInterval(() => {
-        if (up >= 100) { // max jump height
+        if (up >= 100) {
           clearInterval(upInterval);
           const downInterval = setInterval(() => {
             if (up <= 0) {
@@ -79,20 +100,38 @@
       }, 20);
     }
 
-    document.addEventListener('keydown', jump);
+    document.addEventListener("keydown", jump);
+
+    // Score increases over time
+    const scoreInterval = setInterval(() => {
+      if (!gameOver) {
+        score++;
+        scoreDisplay.textContent = score;
+      }
+    }, 200);
 
     // Collision check
-    setInterval(() => {
+    const collisionInterval = setInterval(() => {
+      if (gameOver) return;
+
       const dogBottom = parseInt(window.getComputedStyle(dog).getPropertyValue("bottom"));
       const obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("left"));
 
-      // Check overlap
       if (obstacleLeft > 30 && obstacleLeft < 100 && dogBottom < 40) {
-        alert("Game Over! 🐶💥🌵");
+        gameOver = true;
+        alert("Game Over! 🐶💥🌵\nYour Score: " + score);
+
+        // Save high score if beaten
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("dogHighScore", highScore);
+          highScoreDisplay.textContent = highScore;
+          alert("🎉 New High Score: " + highScore + "!");
+        }
+
         location.reload();
       }
     }, 20);
   </script>
 </body>
 </html>
-
