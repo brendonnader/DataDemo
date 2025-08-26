@@ -28,20 +28,19 @@
       bottom: 0;
       left: 50px;
       font-size: 48px;
-      transition: bottom 0.2s;
     }
 
     .obstacle {
       position: absolute;
       bottom: 0;
-      right: -50px;
+      left: 600px;
       font-size: 48px;
-      animation: move 3s linear infinite;
+      animation: move 2s linear infinite;
     }
 
     @keyframes move {
-      from { right: -50px; }
-      to { right: 650px; }
+      from { left: 600px; }
+      to { left: -50px; }
     }
   </style>
 </head>
@@ -60,37 +59,40 @@
       if (isJumping) return;
       isJumping = true;
       let up = 0;
+
       const upInterval = setInterval(() => {
-        if (up >= 80) {
+        if (up >= 100) { // max jump height
           clearInterval(upInterval);
-          // go back down
           const downInterval = setInterval(() => {
             if (up <= 0) {
               clearInterval(downInterval);
               isJumping = false;
             } else {
               up -= 5;
-              dog.style.bottom = up + 'px';
+              dog.style.bottom = up + "px";
             }
           }, 20);
         } else {
           up += 5;
-          dog.style.bottom = up + 'px';
+          dog.style.bottom = up + "px";
         }
       }, 20);
     }
 
     document.addEventListener('keydown', jump);
 
-    // Check for collision
+    // Collision check
     setInterval(() => {
       const dogBottom = parseInt(window.getComputedStyle(dog).getPropertyValue("bottom"));
-      const obstacleRight = parseInt(window.getComputedStyle(obstacle).getPropertyValue("right"));
-      if (obstacleRight > 540 && obstacleRight < 590 && dogBottom < 40) {
+      const obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("left"));
+
+      // Check overlap
+      if (obstacleLeft > 30 && obstacleLeft < 100 && dogBottom < 40) {
         alert("Game Over! 🐶💥🌵");
         location.reload();
       }
-    }, 10);
+    }, 20);
   </script>
 </body>
 </html>
+
