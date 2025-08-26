@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My First Website</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+    }
+    h1 {
+      color: darkblue;
+    }
+    p {
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 15px;
+      background: darkblue;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .button:hover {
+      background: navy;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome to My Demo Page</h1>
+  <p>This is a simple website made with <strong>HTML</strong> (structure),
+     <strong>CSS</strong> (style), and a little bit of <strong>JavaScript</strong> (interaction).</p>
+
+  <h2>HTML Example</h2>
+  <p>HTML is like the skeleton of a webpage. It tells the browser what’s a heading, what’s a paragraph, and what’s a link.</p>
+
+  <h2>CSS Example</h2>
+  <p>CSS makes things look nice. Notice how the background is light gray and the text has some color? That’s CSS!</p>
+
+  <h2>JavaScript Example</h2>
+  <button class="button" onclick="sayHello()">Click Me!</button>
+
+  <p id="message"></p>
+
+  <script>
+    function sayHello() {
+      document.getElementById("message").innerText = "🎉 You just clicked a button!";
+    }
+  </script>
+
+</body>
+</html>
