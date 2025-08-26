@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workout Maker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #111827;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .btn:hover {
+      background: #1e40af;
+    }
+
+    .workout {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 400px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #374151;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+    }
+
+    .done {
+      text-decoration: line-through;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <h1>Workout Maker 🏋️</h1>
+  <button class="btn" onclick="makeWorkout()">Generate Workout Split</button>
+
+  <div id="workouts"></div>
+
+  <script>
+    const workouts = {
+      Push: [
+        "Bench Press - 4x8",
+        "Overhead Press - 4x8",
+        "Incline Dumbbell Press - 3x10",
+        "Lateral Raises - 3x12",
+        "Triceps Dips - 3x12",
+        "Triceps Pushdowns - 3x12"
+      ],
+      Pull: [
+        "Pull-Ups - 4x8",
+        "Barbell Row - 4x8",
+        "Lat Pulldown - 3x10",
+        "Face Pulls - 3x12",
+        "Biceps Curls - 3x12",
+        "Hammer Curls - 3x12"
+      ],
+      Legs: [
+        "Squats - 4x8",
+        "Romanian Deadlift - 4x8",
+        "Leg Press - 3x10",
+        "Walking Lunges - 3x12",
+        "Leg Extensions - 3x12",
+        "Calf Raises - 4x15"
+      ],
+      Shoulders: [
+        "Overhead Press - 4x8",
+        "Arnold Press - 3x10",
+        "Lateral Raises - 3x12",
+        "Front Raises - 3x12",
+        "Rear Delt Fly - 3x12",
+        "Shrugs - 4x12"
+      ]
+    };
+
+    function makeWorkout() {
+      const container = document.getElementById("workouts");
+      container.innerHTML = "";
+
+      for (let day in workouts) {
+        const div = document.createElement("div");
+        div.classList.add("workout");
+
+        const title = document.createElement("h2");
+        title.textContent = day + " Day";
+        div.appendChild(title);
+
+        const list = document.createElement("ul");
+        workouts[day].forEach(ex => {
+          const li = document.createElement("li");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+
+          const label = document.createElement("label");
+          label.textContent = ex;
+
+          // When checked, cross it out
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+              label.classList.add("done");
+            } else {
+              label.classList.remove("done");
+            }
+          });
+
+          li.appendChild(checkbox);
+          li.appendChild(label);
+          list.appendChild(li);
+        });
+        div.appendChild(list);
+
+        container.appendChild(div);
+      }
+    }
+  </script>
+</body>
+</html>
