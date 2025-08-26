@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Push / Pull / Legs Workout Tracker</title>
+  <title>Randomized Workout Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -71,54 +71,91 @@
   </style>
 </head>
 <body>
-  <h1>Workout Split Tracker</h1>
+  <h1>Randomized Workout Tracker</h1>
 
-  <div class="workout">
+  <div class="workout" id="push-day">
     <h2>Push Day</h2>
-    <ul>
-      <li><input type="checkbox"><span class="emoji">🏋️‍♂️</span>Bench Press</li>
-      <li><input type="checkbox"><span class="emoji">💪</span>Overhead Press</li>
-      <li><input type="checkbox"><span class="emoji">👐</span>Dumbbell Flys</li>
-      <li><input type="checkbox"><span class="emoji">➡️</span>Tricep Pushdowns</li>
-    </ul>
+    <ul></ul>
     <button onclick="resetWorkout(this)">Reset</button>
   </div>
 
-  <div class="workout">
+  <div class="workout" id="pull-day">
     <h2>Pull Day</h2>
-    <ul>
-      <li><input type="checkbox"><span class="emoji">🤸‍♂️</span>Pull-Ups</li>
-      <li><input type="checkbox"><span class="emoji">📦</span>Barbell Rows</li>
-      <li><input type="checkbox"><span class="emoji">🏹</span>Face Pulls</li>
-      <li><input type="checkbox"><span class="emoji">💪</span>Bicep Curls</li>
-    </ul>
+    <ul></ul>
     <button onclick="resetWorkout(this)">Reset</button>
   </div>
 
-  <div class="workout">
+  <div class="workout" id="legs-day">
     <h2>Legs & Shoulders</h2>
-    <ul>
-      <li><input type="checkbox"><span class="emoji">🦵</span>Squats</li>
-      <li><input type="checkbox"><span class="emoji">🪢</span>Romanian Deadlifts</li>
-      <li><input type="checkbox"><span class="emoji">🚶‍♂️</span>Lunges</li>
-      <li><input type="checkbox"><span class="emoji">⬅️➡️</span>Lateral Raises</li>
-    </ul>
+    <ul></ul>
     <button onclick="resetWorkout(this)">Reset</button>
   </div>
 
   <script>
-    // Add strikethrough when checkbox is clicked
-    document.querySelectorAll("input[type='checkbox']").forEach(cb => {
-      cb.addEventListener("change", function() {
-        if (this.checked) {
-          this.parentElement.classList.add("completed");
-        } else {
-          this.parentElement.classList.remove("completed");
-        }
-      });
-    });
+    const exercises = {
+      push: [
+        {name: "Bench Press", emoji: "🏋️‍♂️"},
+        {name: "Overhead Press", emoji: "💪"},
+        {name: "Dumbbell Flys", emoji: "👐"},
+        {name: "Tricep Pushdowns", emoji: "➡️"},
+        {name: "Incline Dumbbell Press", emoji: "🏋️‍♀️"},
+        {name: "Push-Ups", emoji: "🤸‍♂️"}
+      ],
+      pull: [
+        {name: "Pull-Ups", emoji: "🤸‍♂️"},
+        {name: "Barbell Rows", emoji: "📦"},
+        {name: "Face Pulls", emoji: "🏹"},
+        {name: "Bicep Curls", emoji: "💪"},
+        {name: "Lat Pulldowns", emoji: "🪂"},
+        {name: "Hammer Curls", emoji: "🛠️"}
+      ],
+      legs: [
+        {name: "Squats", emoji: "🦵"},
+        {name: "Romanian Deadlifts", emoji: "🪢"},
+        {name: "Lunges", emoji: "🚶‍♂️"},
+        {name: "Lateral Raises", emoji: "⬅️➡️"},
+        {name: "Leg Press", emoji: "🏋️"},
+        {name: "Calf Raises", emoji: "🐾"}
+      ]
+    };
 
-    // Reset function for each workout
+    // Randomly select N exercises from a category
+    function getRandomExercises(category, count=4) {
+      const copy = [...category];
+      const selected = [];
+      while (selected.length < count && copy.length > 0) {
+        const index = Math.floor(Math.random() * copy.length);
+        selected.push(copy.splice(index, 1)[0]);
+      }
+      return selected;
+    }
+
+    function populateWorkout(dayId, category) {
+      const ul = document.querySelector(`#${dayId} ul`);
+      const todayExercises = getRandomExercises(category);
+      ul.innerHTML = "";
+      todayExercises.forEach(ex => {
+        const li = document.createElement("li");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        const span = document.createElement("span");
+        span.className = "emoji";
+        span.textContent = ex.emoji;
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        li.appendChild(document.createTextNode(ex.name));
+        ul.appendChild(li);
+
+        checkbox.addEventListener("change", function() {
+          if (this.checked) {
+            li.classList.add("completed");
+          } else {
+            li.classList.remove("completed");
+          }
+        });
+      });
+    }
+
     function resetWorkout(button) {
       const workout = button.closest(".workout");
       workout.querySelectorAll("input[type='checkbox']").forEach(cb => {
@@ -126,6 +163,13 @@
         cb.parentElement.classList.remove("completed");
       });
     }
+
+    // Populate all workouts on page load
+    populateWorkout("push-day", exercises.push);
+    populateWorkout("pull-day", exercises.pull);
+    populateWorkout("legs-day", exercises.legs);
+
   </script>
 </body>
 </html>
+
