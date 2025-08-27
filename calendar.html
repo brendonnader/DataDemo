@@ -12,15 +12,40 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar-header button {
+      background: #0077ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin: 0 10px;
+      cursor: pointer;
     }
 
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 5px;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
+    }
+
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      background: #ddd;
+      padding: 5px;
+      border-radius: 4px;
     }
 
     .day {
@@ -75,7 +100,7 @@
 
     textarea {
       width: 100%;
-      height: 80px;
+      height: 60px;
       margin-bottom: 10px;
     }
 
@@ -100,6 +125,11 @@
 </head>
 <body>
   <h1>📅 Monthly Planner</h1>
+  <div class="calendar-header">
+    <button onclick="changeMonth(-1)">← Prev</button>
+    <h2 id="monthYear"></h2>
+    <button onclick="changeMonth(1)">Next →</button>
+  </div>
   <div class="calendar" id="calendar"></div>
 
   <!-- Modal for adding notes -->
@@ -123,17 +153,38 @@
     const modalTitle = document.getElementById("modal-title");
     const classesInput = document.getElementById("classes");
     const workInput = document.getElementById("work");
-    let selectedDay = null;
+    const monthYearEl = document.getElementById("monthYear");
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); // 0 = January
-    const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0);
-    const totalDays = monthEnd.getDate();
+    let selectedDay = null;
+    let currentDate = new Date();
 
     function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      monthYearEl.textContent = currentDate.toLocaleString("default", { month: "long" }) + " " + year;
+
       calendarEl.innerHTML = "";
+
+      // Day names
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      dayNames.forEach(name => {
+        const dayNameEl = document.createElement("div");
+        dayNameEl.classList.add("day-name");
+        dayNameEl.textContent = name;
+        calendarEl.appendChild(dayNameEl);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      // Blank spaces before first day
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        calendarEl.appendChild(empty);
+      }
+
+      // Days
       for (let i = 1; i <= totalDays; i++) {
         const dayEl = document.createElement("div");
         dayEl.classList.add("day");
@@ -162,7 +213,9 @@
     }
 
     function openModal(day) {
-      selectedDay = day;
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      selectedDay = { day, month, year };
       modal.style.display = "flex";
       modalTitle.textContent = `Day ${day}`;
 
@@ -178,12 +231,18 @@
 
     function saveDay() {
       if (!selectedDay) return;
+      const { year, month, day } = selectedDay;
       const data = {
         classes: classesInput.value,
         work: workInput.value
       };
-      localStorage.setItem(`day-${year}-${month}-${selectedDay}`, JSON.stringify(data));
+      localStorage.setItem(`day-${year}-${month}-${day}`, JSON.stringify(data));
       closeModal();
+      renderCalendar();
+    }
+
+    function changeMonth(offset) {
+      currentDate.setMonth(currentDate.getMonth() + offset);
       renderCalendar();
     }
 
