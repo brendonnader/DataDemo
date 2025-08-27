@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Class & Work Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f7fa;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .day {
+      background: #fff;
+      border: 1px solid #ddd;
+      min-height: 100px;
+      padding: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .day:hover {
+      background: #e0f0ff;
+    }
+
+    .day-number {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .notes {
+      font-size: 0.8em;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      background: #0077ff;
+      color: white;
+    }
+
+    .close-btn {
+      background: #aaa;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>📅 Monthly Planner</h1>
+  <div class="calendar" id="calendar"></div>
+
+  <!-- Modal for adding notes -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Day</h2>
+      <label>Classes:</label>
+      <textarea id="classes"></textarea>
+      <label>Work/Tasks:</label>
+      <textarea id="work"></textarea>
+      <div>
+        <button class="save-btn" onclick="saveDay()">Save</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const calendarEl = document.getElementById("calendar");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const classesInput = document.getElementById("classes");
+    const workInput = document.getElementById("work");
+    let selectedDay = null;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0 = January
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    const totalDays = monthEnd.getDate();
+
+    function renderCalendar() {
+      calendarEl.innerHTML = "";
+      for (let i = 1; i <= totalDays; i++) {
+        const dayEl = document.createElement("div");
+        dayEl.classList.add("day");
+        dayEl.dataset.day = i;
+
+        const dayNum = document.createElement("div");
+        dayNum.classList.add("day-number");
+        dayNum.textContent = i;
+
+        const notes = document.createElement("div");
+        notes.classList.add("notes");
+
+        const saved = JSON.parse(localStorage.getItem(`day-${year}-${month}-${i}`));
+        if (saved) {
+          notes.textContent = (saved.classes ? "📚 " + saved.classes.split("\n")[0] : "") +
+                              (saved.work ? " | 💼 " + saved.work.split("\n")[0] : "");
+        }
+
+        dayEl.appendChild(dayNum);
+        dayEl.appendChild(notes);
+
+        dayEl.addEventListener("click", () => openModal(i));
+
+        calendarEl.appendChild(dayEl);
+      }
+    }
+
+    function openModal(day) {
+      selectedDay = day;
+      modal.style.display = "flex";
+      modalTitle.textContent = `Day ${day}`;
+
+      const saved = JSON.parse(localStorage.getItem(`day-${year}-${month}-${day}`));
+      classesInput.value = saved ? saved.classes : "";
+      workInput.value = saved ? saved.work : "";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+      selectedDay = null;
+    }
+
+    function saveDay() {
+      if (!selectedDay) return;
+      const data = {
+        classes: classesInput.value,
+        work: workInput.value
+      };
+      localStorage.setItem(`day-${year}-${month}-${selectedDay}`, JSON.stringify(data));
+      closeModal();
+      renderCalendar();
+    }
+
+    // Close modal on background click
+    modal.addEventListener("click", e => {
+      if (e.target === modal) closeModal();
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
