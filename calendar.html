@@ -104,6 +104,26 @@
 
     .save-btn { background: #0077ff; color: white; }
     .close-btn { background: #aaa; color: white; }
+
+    /* Repeating classes section */
+    .repeat-classes {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .repeat-classes h2 {
+      margin-top: 0;
+      font-size: 1.2em;
+    }
+
+    .repeat-classes label {
+      display: block;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
@@ -115,11 +135,19 @@
   </div>
   <div class="calendar" id="calendar"></div>
 
+  <!-- Repeating Classes -->
+  <div class="repeat-classes">
+    <h2>Set Weekly Repeating Classes</h2>
+    <p>Enter classes (one per line) for each weekday:</p>
+    <div id="weekdayInputs"></div>
+    <button class="save-btn" onclick="saveRepeatingClasses()">Save Weekly Schedule</button>
+  </div>
+
   <!-- Modal -->
   <div class="modal" id="modal">
     <div class="modal-content">
       <h2 id="modal-title">Day</h2>
-      <label>Classes (one per line):</label>
+      <label>Classes (extra, one per line):</label>
       <textarea id="classes"></textarea>
       <label>Homework/Tasks (one per line):</label>
       <textarea id="work"></textarea>
@@ -137,12 +165,27 @@
     const classesInput = document.getElementById("classes");
     const workInput = document.getElementById("work");
     const monthYearEl = document.getElementById("monthYear");
+    const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     let selectedDay = null;
     let currentDate = new Date();
 
-    const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    // Load repeating classes from localStorage
+    let repeatingClasses = JSON.parse(localStorage.getItem("repeating-classes")) || {};
+
+    // Build weekday inputs for repeating classes
+    const weekdayInputs = document.getElementById("weekdayInputs");
+    weekdays.forEach((day, idx) => {
+      const textarea = document.createElement("textarea");
+      textarea.id = "repeat-" + idx;
+      textarea.rows = 2;
+      textarea.value = (repeatingClasses[idx] || []).join("\n");
+      const label = document.createElement("label");
+      label.textContent = day + ":";
+      label.appendChild(textarea);
+      weekdayInputs.appendChild(label);
+    });
 
     function renderCalendar() {
       const year = currentDate.getFullYear();
@@ -150,21 +193,21 @@
       const monthStart = new Date(year, month, 1);
       const monthEnd = new Date(year, month + 1, 0);
       const totalDays = monthEnd.getDate();
-      const startDay = monthStart.getDay(); // 0 = Sunday, 1 = Monday...
+      const startDay = monthStart.getDay();
 
       monthYearEl.textContent = `${monthNames[month]} ${year}`;
 
       calendarEl.innerHTML = "";
 
-      // Add weekday headers
+      // Weekday headers
       weekdays.forEach(day => {
         const el = document.createElement("div");
         el.classList.add("day-name");
-        el.textContent = day.slice(0,3); // Mon, Tue, etc.
+        el.textContent = day.slice(0,3);
         calendarEl.appendChild(el);
       });
 
-      // Empty slots before the first day
+      // Empty slots
       for (let i=0; i<startDay; i++) {
         const empty = document.createElement("div");
         calendarEl.appendChild(empty);
@@ -172,6 +215,9 @@
 
       // Days
       for (let i=1; i<=totalDays; i++) {
+        const dateObj = new Date(year, month, i);
+        const weekday = dateObj.getDay();
+
         const dayEl = document.createElement("div");
         dayEl.classList.add("day");
         dayEl.dataset.day = i;
@@ -183,6 +229,20 @@
         const notes = document.createElement("div");
         notes.classList.add("notes");
 
+        // Load repeating classes for this weekday
+        if (repeatingClasses[weekday]) {
+          repeatingClasses[weekday].forEach(text => {
+            const div = document.createElement("div");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.disabled = true; // can't check off repeating classes
+            div.appendChild(checkbox);
+            div.appendChild(document.createTextNode(text + " (Class)"));
+            notes.appendChild(div);
+          });
+        }
+
+        // Load day-specific saved data
         const saved = JSON.parse(localStorage.getItem(`day-${year}-${month}-${i}`));
         if (saved) {
           [...(saved.classes||[]), ...(saved.work||[])].forEach((item, idx) => {
@@ -241,6 +301,16 @@
       };
       saveData(year, month, selectedDay, data);
       closeModal();
+    }
+
+    function saveRepeatingClasses() {
+      repeatingClasses = {};
+      weekdays.forEach((day, idx) => {
+        const textarea = document.getElementById("repeat-" + idx);
+        repeatingClasses[idx] = textarea.value.split("\n").filter(Boolean);
+      });
+      localStorage.setItem("repeating-classes", JSON.stringify(repeatingClasses));
+      renderCalendar();
     }
 
     function prevMonth() {
