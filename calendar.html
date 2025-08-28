@@ -2,27 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Monthly Class & Work Planner</title>
+  <title>Monthly Planner with Checklists</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
       background: #f4f7fa;
     }
-
     h1 {
       text-align: center;
       margin-bottom: 10px;
     }
-
-    .calendar-header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .calendar-controls {
+      text-align: center;
       margin-bottom: 10px;
-      gap: 10px;
     }
-
+    button {
+      padding: 5px 10px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #0077ff;
+      color: white;
+    }
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -30,7 +33,13 @@
       max-width: 900px;
       margin: auto;
     }
-
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      padding: 5px;
+      background: #e0e0e0;
+      border-radius: 4px;
+    }
     .day {
       background: #fff;
       border: 1px solid #ddd;
@@ -40,36 +49,27 @@
       border-radius: 6px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      font-size: 0.85em;
     }
-
     .day:hover {
       background: #e0f0ff;
     }
-
     .day-number {
       font-weight: bold;
       margin-bottom: 5px;
     }
-
     .notes {
-      font-size: 0.8em;
-      color: #333;
+      flex-grow: 1;
       overflow-y: auto;
-      max-height: 90px;
+      font-size: 0.75em;
     }
-
-    /* Weekdays row */
-    .weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      max-width: 900px;
-      margin: auto;
-      margin-bottom: 5px;
-      text-align: center;
-      font-weight: bold;
+    .notes div {
+      display: flex;
+      align-items: center;
     }
-
+    .notes input[type="checkbox"] {
+      margin-right: 5px;
+    }
     /* Modal */
     .modal {
       display: none;
@@ -80,48 +80,24 @@
       justify-content: center;
       align-items: center;
     }
-
     .modal-content {
       background: #fff;
       padding: 20px;
       border-radius: 8px;
       width: 320px;
-      max-height: 90vh;
-      overflow-y: auto;
     }
-
     .modal-content h2 {
       margin-top: 0;
     }
-
-    textarea, input {
+    textarea {
       width: 100%;
+      height: 80px;
       margin-bottom: 10px;
     }
-
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-
-    .checkbox-item input {
-      margin-right: 8px;
-    }
-
-    button {
-      padding: 8px 12px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
     .save-btn {
       background: #0077ff;
       color: white;
     }
-
     .close-btn {
       background: #aaa;
       color: white;
@@ -130,28 +106,169 @@
 </head>
 <body>
   <h1>📅 Monthly Planner</h1>
-
-  <div class="calendar-header">
+  <div class="calendar-controls">
     <button onclick="changeMonth(-1)">⬅ Prev</button>
-    <h2 id="monthYear"></h2>
+    <span id="month-label"></span>
     <button onclick="changeMonth(1)">Next ➡</button>
   </div>
-
-  <div class="weekdays">
-    <div>Sun</div><div>Mon</div><div>Tue</div>
-    <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-  </div>
-
   <div class="calendar" id="calendar"></div>
 
-  <!-- Modal for adding notes -->
+  <!-- Modal -->
   <div class="modal" id="modal">
     <div class="modal-content">
       <h2 id="modal-title">Day</h2>
+      <label>Classes (one per line):</label>
+      <textarea id="classes"></textarea>
+      <label>Homework/Tasks (one per line):</label>
+      <textarea id="work"></textarea>
+      <div>
+        <button class="save-btn" onclick="saveDay()">Save</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
 
-      <h3>Recurring Class (every weekday)</h3>
-      <input type="text" id="classInput" placeholder="e.g. Math 9AM">
+  <script>
+    const calendarEl = document.getElementById("calendar");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const classesInput = document.getElementById("classes");
+    const workInput = document.getElementById("work");
+    const monthLabel = document.getElementById("month-label");
+    let selectedDay = null;
 
-      <h3>Homework / Tasks</h3>
-      <div id="taskList"></div>
-      <input type="text" id="tas
+    let currentDate = new Date();
+    let year = currentDate.getFullYear();
+    let month = currentDate.getMonth();
+
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    function renderCalendar() {
+      calendarEl.innerHTML = "";
+      monthLabel.textContent = currentDate.toLocaleString("default", { month: "long" }) + " " + year;
+
+      // day names row
+      dayNames.forEach(d => {
+        const dn = document.createElement("div");
+        dn.className = "day-name";
+        dn.textContent = d;
+        calendarEl.appendChild(dn);
+      });
+
+      const monthStart = new Date(year, month, 1);
+      const monthEnd = new Date(year, month + 1, 0);
+      const totalDays = monthEnd.getDate();
+      const startDay = monthStart.getDay();
+
+      // empty cells before start
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement("div");
+        calendarEl.appendChild(empty);
+      }
+
+      // actual days
+      for (let i = 1; i <= totalDays; i++) {
+        const dayEl = document.createElement("div");
+        dayEl.classList.add("day");
+        dayEl.dataset.day = i;
+
+        const dayNum = document.createElement("div");
+        dayNum.classList.add("day-number");
+        dayNum.textContent = i;
+
+        const notes = document.createElement("div");
+        notes.classList.add("notes");
+
+        const saved = JSON.parse(localStorage.getItem(`day-${year}-${month}-${i}`));
+        if (saved) {
+          if (saved.classes) {
+            saved.classes.forEach(c => {
+              const div = document.createElement("div");
+              const cb = document.createElement("input");
+              cb.type = "checkbox";
+              cb.checked = c.done;
+              cb.addEventListener("change", () => {
+                c.done = cb.checked;
+                localStorage.setItem(`day-${year}-${month}-${i}`, JSON.stringify(saved));
+              });
+              const label = document.createElement("span");
+              label.textContent = "📚 " + c.text;
+              div.appendChild(cb);
+              div.appendChild(label);
+              notes.appendChild(div);
+            });
+          }
+          if (saved.work) {
+            saved.work.forEach(w => {
+              const div = document.createElement("div");
+              const cb = document.createElement("input");
+              cb.type = "checkbox";
+              cb.checked = w.done;
+              cb.addEventListener("change", () => {
+                w.done = cb.checked;
+                localStorage.setItem(`day-${year}-${month}-${i}`, JSON.stringify(saved));
+              });
+              const label = document.createElement("span");
+              label.textContent = "💼 " + w.text;
+              div.appendChild(cb);
+              div.appendChild(label);
+              notes.appendChild(div);
+            });
+          }
+        }
+
+        dayEl.appendChild(dayNum);
+        dayEl.appendChild(notes);
+        dayEl.addEventListener("click", () => openModal(i));
+        calendarEl.appendChild(dayEl);
+      }
+    }
+
+    function openModal(day) {
+      selectedDay = day;
+      modal.style.display = "flex";
+      modalTitle.textContent = `Day ${day}`;
+
+      const saved = JSON.parse(localStorage.getItem(`day-${year}-${month}-${day}`));
+      classesInput.value = saved && saved.classes ? saved.classes.map(c => c.text).join("\n") : "";
+      workInput.value = saved && saved.work ? saved.work.map(w => w.text).join("\n") : "";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+      selectedDay = null;
+    }
+
+    function saveDay() {
+      if (!selectedDay) return;
+      const data = {
+        classes: classesInput.value.split("\n").filter(t => t.trim() !== "").map(t => ({ text: t.trim(), done: false })),
+        work: workInput.value.split("\n").filter(t => t.trim() !== "").map(t => ({ text: t.trim(), done: false }))
+      };
+      localStorage.setItem(`day-${year}-${month}-${selectedDay}`, JSON.stringify(data));
+      closeModal();
+      renderCalendar();
+    }
+
+    function changeMonth(delta) {
+      month += delta;
+      if (month < 0) {
+        month = 11;
+        year--;
+      } else if (month > 11) {
+        month = 0;
+        year++;
+      }
+      currentDate = new Date(year, month, 1);
+      renderCalendar();
+    }
+
+    // Close modal on background click
+    modal.addEventListener("click", e => {
+      if (e.target === modal) closeModal();
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
